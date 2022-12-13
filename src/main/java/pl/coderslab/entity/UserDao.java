@@ -17,8 +17,8 @@ public class UserDao {
     private static final String SELECT_ALL_USER_QUERY =
             "SELECT * FROM users";
     private static final String UPDATE_USER_QUERY =
-            "UPDATE users (username, email,password)" +
-                    "VALUES(?,?,?)";
+            "UPDATE users " +
+                    "SET username = ?, email = ?, password = ? WHERE id = ?";
 
     public String hashPassword(String password) {
         return BCrypt.hashpw(password, BCrypt.gensalt());
@@ -98,8 +98,21 @@ public class UserDao {
 
     public User[] addToArray(User[] allUser, User user) {
         allUser = Arrays.copyOf(allUser, allUser.length + 1);
-        allUser[allUser.length-1] = new User();
-        allUser[allUser.length-1] = user;
+        allUser[allUser.length - 1] = new User();
+        allUser[allUser.length - 1] = user;
         return allUser;
+    }
+
+    public void update(User user) {
+        try (Connection connection = DbUtil.getConnection()) {
+            PreparedStatement statement = connection.prepareStatement(UPDATE_USER_QUERY);
+            statement.setString(1, user.getUserName());
+            statement.setString(2, user.getEmail());
+            statement.setString(3, hashPassword(user.getPassword()));
+            statement.setInt(4, user.getId());
+            statement.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 }
